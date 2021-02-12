@@ -137,6 +137,9 @@ def upload(mdFile, notionPage, imagePathFunc=None, notionPyRendererCls=NotionPyR
 
     # Upload all the blocks
     for idx, blockDescriptor in enumerate(rendered):
+        if idx == 0 and blockDescriptor['type'].__name__ == 'HeaderBlock':
+            if blockDescriptor['title'] == notionPage.title:
+                continue
         pct = (idx+1)/len(rendered) * 100
         print(f"\rUploading {blockDescriptor['type'].__name__}, {idx+1}/{len(rendered)} ({pct:.1f}%)", end='')
         uploadBlock(blockDescriptor, notionPage, mdFile.name, imagePathFunc)
@@ -207,7 +210,12 @@ def cli(argv):
                     print(f"Removing previous {child.title}...")
                     child.remove()
             # Make the new page in Notion.so
-            uploadPage = page.children.add_new(PageBlock, title=mdFileName)
+            if len(mdFileName) >= 3 and mdFileName[-3:] == '.md':
+                pageTitle = mdFileName[:-3]
+                pageTitle = pageTitle.replace('_', ' ')
+            else:
+                pageTitle = mdFileName
+            uploadPage = page.children.add_new(PageBlock, title=pageTitle)
         print(f"Uploading {mdPath} to Notion.so at page {uploadPage.title}...")
         upload(mdFile, uploadPage, None, notionPyRendererCls)
 
